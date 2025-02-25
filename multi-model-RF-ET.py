@@ -58,7 +58,7 @@ input_data = pd.DataFrame({
     'Daily_Dose': [Daily_Dose],
     'Single_Dose': [Single_Dose],
     'VPA': [VPA],
-    'Terms': Terms],
+    'Terms': [Terms],
     'Cmin': [Cmin],
     'DBIL': [DBIL],
     'TBIL': [TBIL],
