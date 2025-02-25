@@ -8,13 +8,13 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
 # Load the models
-Random Forest = joblib.load('Random Forest.pkl')
-Extra Trees = joblib.load('Extra Trees.pkl')
+Random_Forest = joblib.load('Random Forest.pkl')
+Extra_Trees = joblib.load('Extra Trees.pkl')
 
 # Model dictionary
 models = {
-    'Random Forest (RF)': Random Forest,
-    'Extra Trees': Extra Trees
+    'Random Forest (RF)': Random_Forest,
+    'Extra Trees': Extra_Trees
 }
 
 # Title
