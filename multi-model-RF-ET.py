@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 import shap
-from streamlit.components.v1 import html
+import matplotlib.pyplot as plt
 
 # 允许加载高分辨率图片
 Image.MAX_IMAGE_PIXELS = None
@@ -75,21 +75,9 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-        # SHAP 力图
-        st.write("### SHAP Force Plot")
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(input_data)
-
-        # 初始化 SHAP 的 JavaScript 环境
-        shap.initjs()
-
-        # 生成 SHAP 力图的 HTML 内容
-        shap_html = shap.force_plot(
-            explainer.expected_value[prediction],
-            shap_values[prediction],
-            input_data,
-            matplotlib=False,
-            show=False,
-            as_html=True
-        )
-        html(shap_html, height=200)
+        # SHAP 瀑布图
+        st.write("### SHAP Waterfall Plot")
+        explainer = shap.Explainer(model)
+        shap_values = explainer(input_data)
+        shap.plots.waterfall(shap_values[0], max_display=10)
+        st.pyplot()
