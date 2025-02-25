@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 import shap
-import matplotlib.pyplot as plt
+from streamlit.components.v1 import html
 
 # 允许加载高分辨率图片
 Image.MAX_IMAGE_PIXELS = None
@@ -24,8 +24,8 @@ st.title("Antiepileptic Drug (OXC) Treatment Outcome Prediction with SHAP Visual
 
 # Description
 st.write("""
-This app predicts the likelihood of heart disease based on input features.
-Select one or more models, input feature values, and get predictions and probability estimates.
+This app predicts the likelihood of treatment outcomes based on input features.
+Select one or more models, input feature values, and get predictions and SHAP explanations.
 """)
 
 # Sidebar for model selection with multi-select option
@@ -38,7 +38,7 @@ WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, valu
 Daily_Dose = st.sidebar.number_input("Daily Dose (Daily_Dose)", min_value=0.0, max_value=4000.0, value=2000.0)
 Single_Dose = st.sidebar.number_input("Single Dose (Single_Dose)", min_value=0.0, max_value=4000.0, value=450.0)
 VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 1])
-Terms = st.sidebar.selectbox("Terms(1 = Outpatient, 0 = Be hospitalized)", [0, 1])
+Terms = st.sidebar.selectbox("Terms (1 = Outpatient, 0 = Hospitalized)", [0, 1])
 Cmin = st.sidebar.number_input("Trough concentration (Cmin)", min_value=0.0, max_value=100.0, value=15.0)
 DBIL = st.sidebar.number_input("Direct Bilirubin (DBIL)", min_value=0.0, max_value=1000.0, value=5.0)
 TBIL = st.sidebar.number_input("Total Bilirubin (TBIL)", min_value=0.0, max_value=200.0, value=5.0)
@@ -52,10 +52,8 @@ HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0
 MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
-# 获取模型训练时的特征名称,获取模型训练时的特征名称：使用 random_forest.feature_names_in_ 获取模型训练时的特征名称。
+# 获取模型训练时的特征名称
 feature_names = random_forest.feature_names_in_
-
-# Convert inputs to DataFrame for model prediction,确保输入数据的特征名称和顺序一致：在创建 input_data 时，使用 zip 函数确保特征名称和顺序与模型训练时一致。
 input_data = pd.DataFrame({
     feature: [value] for feature, value in zip(feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
 })
@@ -77,17 +75,17 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-        # Calculate SHAP values
+        # SHAP 力图
+        st.write("### SHAP Force Plot")
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(input_data)
-
-        # Generate SHAP force plots for multiple samples and save as HTML
-        for i in range(input_data.shape[0]):
-            shap.force_plot(
-                explainer.expected_value[prediction],
-                shap_values[prediction][i],
-                input_data.iloc[i],
-                show=False,
-                save_html=f"{model_name}_shap_force_plot_sample_{i}.html"
-            )
-            components.html(f"{model_name}_shap_force_plot_sample_{i}.html", height=500)  # 显示保存的 HTML 文件
+        class_index = prediction  # 当前预测类别
+        shap_html = shap.force_plot(
+            explainer.expected_value[class_index],
+            shap_values[class_index],
+            input_data,
+            matplotlib=False,
+            show=False,
+            as_html=True
+        )
+        html(shap_html, height=200)
