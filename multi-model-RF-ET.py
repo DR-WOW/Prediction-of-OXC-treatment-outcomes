@@ -101,7 +101,7 @@ if st.sidebar.button("Predict"):
             explainer.expected_value[class_index],
             shap_values[class_index],
             input_data,
-            matplotlib=True,
+           # matplotlib=True,
         )
         # 保存并显示 SHAP 图
         plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
