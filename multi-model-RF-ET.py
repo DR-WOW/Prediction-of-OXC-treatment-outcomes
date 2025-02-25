@@ -192,6 +192,7 @@ if st.sidebar.button("Predict"):
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(input_data)
 
+        
         # Generate SHAP force plots for multiple samples and save as HTML
         for i in range(input_data.shape[0]):
             shap.force_plot(
@@ -199,5 +200,6 @@ if st.sidebar.button("Predict"):
                 shap_values[prediction][i],
                 input_data.iloc[i],
                 show=False,
-                save_html=f"shap_force_plot_sample_{i}.html"
+                save_html=f"{model_name}_shap_force_plot_sample_{i}.html"
             )
+            components.html(f"{model_name}_shap_force_plot_sample_{i}.html", height=500)  # 显示保存的 HTML 文件
