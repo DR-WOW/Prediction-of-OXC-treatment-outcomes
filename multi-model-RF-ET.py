@@ -101,7 +101,7 @@ if st.sidebar.button("Predict"):
             explainer.expected_value[class_index],
             shap_values[class_index],
             input_data,
-           # matplotlib=True,
+            matplotlib=False, #保存多个样本的 SHAP 力图，你需要设置 matplotlib=False，这将生成 HTML 代码，而不是直接通过 Matplotlib 生成图像。
         )
         # 保存并显示 SHAP 图
         plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
