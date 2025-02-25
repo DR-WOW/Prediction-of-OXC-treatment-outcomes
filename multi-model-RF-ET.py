@@ -3,18 +3,20 @@ import joblib
 import pandas as pd
 import numpy as np
 from PIL import Image
+import shap
+import matplotlib.pyplot as plt
 
 # 允许加载高分辨率图片
 Image.MAX_IMAGE_PIXELS = None
 
 # Load the models
-Random_Forest = joblib.load('Random Forest.pkl')
-Extra_Trees = joblib.load('Extra Trees.pkl')
+random_forest = joblib.load('Random Forest.pkl')
+extra_trees = joblib.load('Extra Trees.pkl')
 
 # Model dictionary
 models = {
-    'Random Forest (RF)': Random_Forest,
-    'Extra Trees': Extra_Trees
+    'Random Forest (RF)': random_forest,
+    'Extra Trees': extra_trees
 }
 
 # Title
@@ -50,27 +52,12 @@ HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0
 MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
+# 获取模型训练时的特征名称,获取模型训练时的特征名称：使用 random_forest.feature_names_in_ 获取模型训练时的特征名称。
+feature_names = random_forest.feature_names_in_
 
-# Convert inputs to DataFrame for model prediction
+# Convert inputs to DataFrame for model prediction,确保输入数据的特征名称和顺序一致：在创建 input_data 时，使用 zip 函数确保特征名称和顺序与模型训练时一致。
 input_data = pd.DataFrame({
-    'AGE': [AGE],
-    'WT': [WT],
-    'Daily_Dose': [Daily_Dose],
-    'Single_Dose': [Single_Dose],
-    'VPA': [VPA],
-    'Terms': [Terms],
-    'Cmin': [Cmin],
-    'DBIL': [DBIL],
-    'TBIL': [TBIL],
-    'ALT': [ALT],
-    'AST': [AST],
-    'SCR': [SCR],
-    'BUN': [BUN],
-    'CLCR': [CLCR],
-    'HGB': [HGB],
-    'HCT': [HCT],
-    'MCH': [MCH],
-    'MCHC': [MCHC]
+    feature: [value] for feature, value in zip(feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
 })
 
 # Add a predict button
@@ -80,45 +67,42 @@ if st.sidebar.button("Predict"):
         model = models[model_name]
         prediction = model.predict(input_data)[0]
         predicted_proba = model.predict_proba(input_data)[0]
- # 提取预测的类别概率
-        probabilities = predicted_proba[predicted_class] * 100
-
 
         # Display the prediction and probabilities for each selected model
         st.write(f"## Model: {model_name}")
         st.write(f"**Prediction**: {'Good Responder' if prediction == 1 else 'Poor Responder'}")
         st.write("**Prediction Probabilities**")
-        st.write(f"Based on feature values, predicted possibility of Good Responder is {probabilities:.2f}%")
-        st.write(f"Based on feature values, predicted possibility of Poor Responder is {probabilities:.2f}%")
+        probability_good = predicted_proba[1] * 100
+        probability_poor = predicted_proba[0] * 100
+        st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
+        st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
+        # 显示预测结果，使用 Matplotlib 渲染指定字体
+        text = f"Based on feature values, predicted possibility of good responder is {probability_good:.2f}%"
+        fig, ax = plt.subplots(figsize=(8, 1))
+        ax.text(
+            0.5, 0.5, text,
+            fontsize=16,
+            ha='center', va='center',
+            fontname='Times New Roman',
+            transform=ax.transAxes
+        )
+        ax.axis('off')
+        plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
+        st.image("prediction_text.png")
 
+        # 计算 SHAP 值
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(input_data)
 
-# 显示预测结果，使用 Matplotlib 渲染指定字体
-    text = f"Based on feature values, predicted possibility of good responder is {probability:.2f}%"
-    fig, ax = plt.subplots(figsize=(8, 1))
-    ax.text(
-        0.5, 0.5, text,
-        fontsize=16,
-        ha='center', va='center',
-        fontname='Times New Roman',
-        transform=ax.transAxes
-    )
-    ax.axis('off')
-    plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
-    st.image("prediction_text.png")
-
-    # 计算 SHAP 值
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(pd.DataFrame([feature_values], columns=feature_ranges.keys()))
-
-    # 生成 SHAP 力图
-    class_index = predicted_class  # 当前预测类别
-    shap_fig = shap.force_plot(
-        explainer.expected_value[class_index],
-        shap_values[:,:,class_index],
-        pd.DataFrame([feature_values], columns=feature_ranges.keys()),
-        matplotlib=True,
-    )
-    # 保存并显示 SHAP 图
-    plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
-    st.image("shap_force_plot.png")
+        # 生成 SHAP 力图
+        class_index = prediction  # 当前预测类别
+        shap_fig = shap.force_plot(
+            explainer.expected_value[class_index],
+            shap_values[class_index],
+            input_data,
+            matplotlib=True,
+        )
+        # 保存并显示 SHAP 图
+        plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
+        st.image("shap_force_plot.png")
