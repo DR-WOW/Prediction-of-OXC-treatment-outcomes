@@ -79,10 +79,14 @@ if st.sidebar.button("Predict"):
         st.write("### SHAP Force Plot")
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(input_data)
-        class_index = prediction  # 当前预测类别
+
+        # 初始化 SHAP 的 JavaScript 环境
+        shap.initjs()
+
+        # 生成 SHAP 力图的 HTML 内容
         shap_html = shap.force_plot(
-            explainer.expected_value[class_index],
-            shap_values[class_index],
+            explainer.expected_value[prediction],
+            shap_values[prediction],
             input_data,
             matplotlib=False,
             show=False,
