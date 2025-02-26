@@ -53,9 +53,17 @@ MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
 # 确保 input_data 的列名与模型训练时的特征名称一致
-expected_feature_names = ['AGE', 'WT', 'Daily_Dose', 'Single_Dose', 'VPA', 'Terms', 'Cmin', 'DBIL', 'TBIL', 'ALT', 'AST', 'SCR', 'BUN', 'CLCR', 'HGB', 'HCT', 'MCH', 'MCHC']
+expected_feature_names = ['AGE', 'WT', 'Daily_Dose', 'Single_Dose', 'VPA', 'Terms', 
+                          'Cmin', 'DBIL', 'TBIL', 'ALT', 'AST', 'SCR', 'BUN', 
+                          'CLCR', 'HGB', 'HCT', 'MCH', 'MCHC']
+
+# 创建输入数据时遵循 expected_feature_names 的顺序
 input_data = pd.DataFrame({
-    feature: [value] for feature, value in zip(expected_feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
+    feature: [value] for feature, value in zip(expected_feature_names, [AGE, WT, Daily_Dose, 
+                                                                       Single_Dose, VPA, Terms, 
+                                                                       Cmin, DBIL, TBIL, ALT, 
+                                                                       AST, SCR, BUN, CLCR, 
+                                                                       HGB, HCT, MCH, MCHC])
 })
 
 # Add a predict button
@@ -63,17 +71,17 @@ if st.sidebar.button("Predict"):
     # Display predictions and probabilities for selected models
     for model_name in selected_models:
         model = models[model_name]
-        
-        # 检查输入数据的列名
+
+        # Check if the input data columns match the expected feature names
+        if list(input_data.columns) != expected_feature_names:
+            st.error("The feature names in input data do not match the expected feature names.")
+            continue  # Skip this model if the feature names do not match
+
+        # Display the input data (for debug)
         st.write(f"Input Data Columns for {model_name}: {input_data.columns.tolist()}")  # Debug output
-        
-        # 检查列名是否匹配模型特征
-        if set(input_data.columns) != set(expected_feature_names):
-            st.error("The input feature names do not match the expected feature names.")
-            continue  # 跳过这个模型的预测
-        
-        # Make sure that input data is in the correct format
+
         try:
+            # Make predictions
             prediction = model.predict(input_data)[0]
             predicted_proba = model.predict_proba(input_data)[0]
 
@@ -117,6 +125,6 @@ if st.sidebar.button("Predict"):
             st.subheader(f"SHAP Force Plot for {model_name}")
             plt.savefig(f"shap_force_plot_{model_name}.png", bbox_inches='tight', dpi=1200)
             st.image(f"shap_force_plot_{model_name}.png")
-        
+
         except ValueError as e:
             st.error(f"Error predicting with {model_name}: {e}")
