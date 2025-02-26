@@ -103,24 +103,14 @@ if st.sidebar.button("Predict"):
         try:
             # Choose the SHAP values based on the prediction
             if prediction == 1:  # Good Responder
-                shap_values_selected = shap_values.values[0, :, 1]
-                base_value = shap_values.base_values[1]
+                shap_values_selected = shap_values[:, 1]
                 st.write("### SHAP Waterfall Plot for Good Responder")
             else:  # Poor Responder
-                shap_values_selected = shap_values.values[0, :, 0]
-                base_value = shap_values.base_values[0]
+                shap_values_selected = shap_values[:, 0]
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Generate Waterfall Plot
-            shap.plots.waterfall(
-                shap.Explanation(
-                    values=shap_values_selected,
-                    base_values=base_value,
-                    data=input_data.iloc[0].values,
-                    feature_names=feature_names
-                ),
-                max_display=10
-            )
+            shap.plots.waterfall(shap_values_selected[0], max_display=10)
             st.pyplot()
         except Exception as e:
             st.error(f"Error generating SHAP plots for {model_name}: {e}")
