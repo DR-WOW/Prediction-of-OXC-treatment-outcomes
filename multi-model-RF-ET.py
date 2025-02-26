@@ -31,13 +31,29 @@ selected_models = st.sidebar.multiselect("Select models to use for prediction", 
 st.sidebar.header("Enter the following feature values:")
 AGE = st.sidebar.number_input("AGE", min_value=0.0, max_value=18.0, value=5.0)
 WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, value=20.0)
-# ... (other feature inputs)
+Daily_Dose = st.sidebar.number_input("Daily Dose (Daily_Dose)", min_value=0.0, max_value=4000.0, value=2000.0)
+Single_Dose = st.sidebar.number_input("Single Dose (Single_Dose)", min_value=0.0, max_value=4000.0, value=450.0)
+VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 1])
+Terms = st.sidebar.selectbox("Terms(1 = Outpatient, 0 = Be hospitalized)", [0, 1])
+Cmin = st.sidebar.number_input("Trough concentration (Cmin)", min_value=0.0, max_value=100.0, value=15.0)
+DBIL = st.sidebar.number_input("Direct Bilirubin (DBIL)", min_value=0.0, max_value=1000.0, value=5.0)
+TBIL = st.sidebar.number_input("Total Bilirubin (TBIL)", min_value=0.0, max_value=200.0, value=5.0)
+ALT = st.sidebar.number_input("Alanine Aminotransferase (ALT)", min_value=0.0, max_value=200.0, value=20.0)
+AST = st.sidebar.number_input("Aspartate Aminotransferase (AST)", min_value=0.0, max_value=500.0, value=20.0)
+SCR = st.sidebar.number_input("Serum Creatinine (SCR)", min_value=0.0, max_value=200.0, value=35.0)
+BUN = st.sidebar.number_input("Blood Urea Nitrogen (BUN)", min_value=0.0, max_value=200.0, value=5.0)
+CLCR = st.sidebar.number_input("Creatinine Clearance Rate (CLCR)", min_value=0.0, max_value=500.0, value=90.0)
+HGB = st.sidebar.number_input("Hemoglobin (HGB)", min_value=0.0, max_value=500.0, value=120.0)
+HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0, value=35.0)
+MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
+MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
-# Convert inputs to DataFrame for model prediction
+# 获取模型训练时的特征名称,获取模型训练时的特征名称：使用 random_forest.feature_names_in_ 获取模型训练时的特征名称。
+feature_names = random_forest.feature_names_in_
+
+# Convert inputs to DataFrame for model prediction,确保输入数据的特征名称和顺序一致：在创建 input_data 时，使用 zip 函数确保特征名称和顺序与模型训练时一致。
 input_data = pd.DataFrame({
-    'AGE': [AGE],
-    'WT': [WT],
-    # ... (other features)
+    feature: [value] for feature, value in zip(feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
 })
 
 # Add a predict button
