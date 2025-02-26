@@ -118,7 +118,7 @@ if st.sidebar.button("Predict"):
             plt.rcParams['figure.dpi'] = 300  # 设置图片的 DPI
 
             # Generate Waterfall Plot
-            shap.plots.waterfall(shap_values_selected[0], max_display=30)
+            shap.plots.waterfall(shap_values_selected[0], max_display=30, feature_names=feature_names)
             plt.savefig("shap_waterfall.png", dpi=300)  # 保存图片并设置 DPI
             st.image("shap_waterfall.png")  # 在 Streamlit 中显示图片
         except Exception as e:
