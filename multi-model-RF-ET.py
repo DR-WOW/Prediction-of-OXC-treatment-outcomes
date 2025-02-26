@@ -70,7 +70,7 @@ input_data = pd.DataFrame({
 if st.sidebar.button("Predict"):
     # Display predictions and probabilities for selected models
     for model_name in selected_models:
-        model = models[model_name]
+        model = models[model_name]  # Ensure model is correctly assigned
         try:
             prediction = model.predict(input_data)[0]
             predicted_proba = model.predict_proba(input_data)[0]
@@ -102,8 +102,8 @@ if st.sidebar.button("Predict"):
         # Generate SHAP plots for Good Responder and Poor Responder
         try:
             # Extract SHAP values for each class
-            shap_good_responder = shap_values.values[:, 1, :]  # SHAP values for Good Responder
-            shap_poor_responder = shap_values.values[:, 0, :]  # SHAP values for Poor Responder
+            shap_good_responder = shap_values[:, 1, :]  # SHAP values for Good Responder
+            shap_poor_responder = shap_values[:, 0, :]  # SHAP values for Poor Responder
 
             # Plot for Good Responder
             st.write("### SHAP Waterfall Plot for Good Responder")
