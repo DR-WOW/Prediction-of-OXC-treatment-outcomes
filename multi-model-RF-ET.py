@@ -57,25 +57,35 @@ expected_feature_names = ['AGE', 'WT', 'Daily_Dose', 'Single_Dose', 'VPA', 'Term
                           'Cmin', 'DBIL', 'TBIL', 'ALT', 'AST', 'SCR', 'BUN', 
                           'CLCR', 'HGB', 'HCT', 'MCH', 'MCHC']
 
-# 创建输入数据时遵循 expected_feature_names 的顺序
 input_data = pd.DataFrame({
-    feature: [value] for feature, value in zip(expected_feature_names, [AGE, WT, Daily_Dose, 
-                                                                       Single_Dose, VPA, Terms, 
-                                                                       Cmin, DBIL, TBIL, ALT, 
-                                                                       AST, SCR, BUN, CLCR, 
-                                                                       HGB, HCT, MCH, MCHC])
+    'AGE': [AGE],
+    'WT': [WT],
+    'Daily_Dose': [Daily_Dose],
+    'Single_Dose': [Single_Dose],
+    'VPA': [VPA],
+    'Terms': [Terms],
+    'Cmin': [Cmin],
+    'DBIL': [DBIL],
+    'TBIL': [TBIL],
+    'ALT': [ALT],
+    'AST': [AST],
+    'SCR': [SCR],
+    'BUN': [BUN],
+    'CLCR': [CLCR],
+    'HGB': [HGB],
+    'HCT': [HCT],
+    'MCH': [MCH],
+    'MCHC': [MCHC]
 })
+
+# 重新排列 DataFrame 的列，以确保顺序正确
+input_data = input_data[expected_feature_names]
 
 # Add a predict button
 if st.sidebar.button("Predict"):
     # Display predictions and probabilities for selected models
     for model_name in selected_models:
         model = models[model_name]
-
-        # Check if the input data columns match the expected feature names
-        if list(input_data.columns) != expected_feature_names:
-            st.error("The feature names in input data do not match the expected feature names.")
-            continue  # Skip this model if the feature names do not match
 
         # Display the input data (for debug)
         st.write(f"Input Data Columns for {model_name}: {input_data.columns.tolist()}")  # Debug output
