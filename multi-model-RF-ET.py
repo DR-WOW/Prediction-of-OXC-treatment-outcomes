@@ -57,8 +57,8 @@ try:
     feature_names = random_forest.feature_names_in_
     st.success("Feature names loaded successfully.")
 except AttributeError:
-    st.error("Model does not have 'feature_names_in_' attribute. Please ensure the model is trained with a compatible library.")
-    raise
+    feature_names = ["AGE", "WT", "Daily_Dose", "Single_Dose", "VPA", "Terms", "Cmin", "DBIL", "TBIL", "ALT", "AST", "SCR", "BUN", "CLCR", "HGB", "HCT", "MCH", "MCHC"]
+    st.warning("Model does not have 'feature_names_in_' attribute. Using default feature names.")
 
 # Convert inputs to DataFrame for model prediction
 input_data = pd.DataFrame({
@@ -89,27 +89,18 @@ if st.sidebar.button("Predict"):
         # Calculate SHAP values
         try:
             if isinstance(model, (RandomForestClassifier, ExtraTreesClassifier)):
-                explainer = shap.TreeExplainer(model)
+                explainer = shap.Explainer(model.predict_proba, input_data)
+                shap_values = explainer(input_data)
+                st.success("SHAP values calculated successfully.")
             else:
                 raise ValueError("Unsupported model type for SHAP TreeExplainer.")
-            
-            shap_values = explainer.shap_values(input_data)
-            st.success("SHAP values calculated successfully.")
         except Exception as e:
             st.error(f"Error calculating SHAP values for {model_name}: {e}")
             continue
 
-        # Generate SHAP force plots for multiple samples
-        for i in range(input_data.shape[0]):
-            try:
-                expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
-                html_output = shap.force_plot(
-                    expected_value,
-                    shap_values[1][i, :],  # Assuming binary classification
-                    input_data.iloc[i],
-                    show=False,
-                    html_output=True
-                )
-                components.html(html_output, height=500)
-            except Exception as e:
-                st.error(f"Error generating SHAP force plot for {model_name}: {e}")
+        # Generate SHAP plots
+        try:
+            shap.plots.waterfall(shap_values[0], max_display=10)
+            st.pyplot()
+        except Exception as e:
+            st.error(f"Error generating SHAP plot for {model_name}: {e}")
