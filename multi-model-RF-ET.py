@@ -92,7 +92,7 @@ if st.sidebar.button("Predict"):
             if isinstance(model, (RandomForestClassifier, ExtraTreesClassifier)):
                 explainer = shap.TreeExplainer(model)
                 shap_values = explainer.shap_values(input_data)
-                expected_value = explainer.expected_value
+                expected_value = explainer.expected_value[prediction]
                 st.success("SHAP values calculated successfully.")
             else:
                 raise ValueError("Unsupported model type for SHAP TreeExplainer.")
@@ -104,14 +104,14 @@ if st.sidebar.button("Predict"):
         try:
             # Choose the SHAP values based on the prediction
             if prediction == 1:  # Good Responder
-                shap_values_selected = shap_values[1]
+                shap_values_selected = shap_values[1][0]
                 st.write("### SHAP Waterfall Plot for Good Responder")
             else:  # Poor Responder
-                shap_values_selected = shap_values[0]
+                shap_values_selected = shap_values[0][0]
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Create an Explanation object
-            explanation = shap.Explanation(values=shap_values_selected, base_values=expected_value, data=input_data, feature_names=feature_names)
+            explanation = shap.Explanation(values=shap_values_selected, base_values=expected_value, data=input_data.iloc[0], feature_names=feature_names)
 
             # Adjust plot parameters
             plt.rcParams['figure.figsize'] = (18, 8)  # 设置图片大小
