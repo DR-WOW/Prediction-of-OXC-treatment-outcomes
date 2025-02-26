@@ -12,7 +12,7 @@ random_forest = joblib.load('Random Forest.pkl')
 # Model dictionary
 models = {
     'Random Forest (RF)': random_forest,
-    'Extra Trees': extra_trees
+    #'Extra Trees': extra_trees
 }
 
 # Title
