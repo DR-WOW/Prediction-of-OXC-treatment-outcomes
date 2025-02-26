@@ -2,36 +2,35 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
-from PIL import Image
 import shap
 import matplotlib.pyplot as plt
 
 # 允许加载高分辨率图片
 Image.MAX_IMAGE_PIXELS = None
 
-# Load the models
+# 加载模型
 random_forest = joblib.load('Random Forest.pkl')
 extra_trees = joblib.load('Extra Trees.pkl')
 
-# Model dictionary
+# 模型字典
 models = {
     'Random Forest (RF)': random_forest,
     'Extra Trees': extra_trees
 }
 
-# Title
+# 标题
 st.title("Antiepileptic Drug (OXC) Treatment Outcome Prediction with SHAP Visualization")
 
-# Description
+# 描述
 st.write("""
 This app predicts the likelihood of heart disease based on input features.
 Select one or more models, input feature values, and get predictions and probability estimates.
 """)
 
-# Sidebar for model selection with multi-select option
+# 侧边栏模型选择，支持多选
 selected_models = st.sidebar.multiselect("Select models to use for prediction", list(models.keys()), default=list(models.keys()))
 
-# Input fields for the features
+# 输入字段，用于输入特征值
 st.sidebar.header("Enter the following feature values:")
 AGE = st.sidebar.number_input("AGE", min_value=0.0, max_value=18.0, value=5.0)
 WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, value=20.0)
@@ -52,21 +51,37 @@ HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0
 MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
-# 确保 input_data 的列名与模型训练时的特征名称一致
-expected_feature_names = ['AGE', 'WT', 'Daily_Dose', 'Single_Dose', 'VPA', 'Terms', 'Cmin', 'DBIL', 'TBIL', 'ALT', 'AST', 'SCR', 'BUN', 'CLCR', 'HGB', 'HCT', 'MCH', 'MCHC']
+# 转换输入为模型预测格式
 input_data = pd.DataFrame({
-    feature: [value] for feature, value in zip(expected_feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
+    'AGE': [AGE],
+    'WT': [WT],
+    'Daily_Dose': [Daily_Dose],
+    'Single_Dose': [Single_Dose],
+    'VPA': [VPA],
+    'Terms': [Terms],
+    'Cmin': [Cmin],
+    'DBIL': [DBIL],
+    'TBIL': [TBIL],
+    'ALT': [ALT],
+    'AST': [AST],
+    'SCR': [SCR],
+    'BUN': [BUN],
+    'CLCR': [CLCR],
+    'HGB': [HGB],
+    'HCT': [HCT],
+    'MCH': [MCH],
+    'MCHC': [MCHC]
 })
 
-# Add a predict button
+# 添加预测按钮
 if st.sidebar.button("Predict"):
-    # Display predictions and probabilities for selected models
+    # 显示所选模型的预测和概率
     for model_name in selected_models:
         model = models[model_name]
         prediction = model.predict(input_data)[0]
         predicted_proba = model.predict_proba(input_data)[0]
 
-        # Display the prediction and probabilities for each selected model
+        # 显示每个所选模型的预测和概率
         st.write(f"## Model: {model_name}")
         st.write(f"**Prediction**: {'Good Responder' if prediction ==1 else 'Poor Responder'}")
         st.write("**Prediction Probabilities**")
@@ -75,27 +90,13 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-        # 显示预测结果，使用 Matplotlib 渲染指定字体
-        text = f"Based on feature values, predicted possibility of good responder is {probability_good:.2f}%"
-        fig, ax = plt.subplots(figsize=(8, 1))
-        ax.text(
-            0.5, 0.5, text,
-            fontsize=16,
-            ha='center', va='center',
-            fontname='Times New Roman',
-            transform=ax.transAxes
-        )
-        ax.axis('off')
-        plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
-        st.image("prediction_text.png")
-
         # 计算 SHAP 值
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(input_data)
 
         # 生成 SHAP 力图
         class_index = prediction  # 当前预测类别
-        shap_fig = shap.force_plot(
+        shap.force_plot(
             explainer.expected_value[class_index],
             shap_values[class_index][0],  # 选择第一个样本的 SHAP 值
             input_data.iloc[0],  # 选择第一个样本的特征值
