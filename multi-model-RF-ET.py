@@ -24,8 +24,8 @@ st.title("Antiepileptic Drug (OXC) Treatment Outcome Prediction with SHAP Visual
 
 # Description
 st.write("""
-This app predicts the likelihood of treatment outcomes based on input features.
-Select one or more models, input feature values, and get predictions and SHAP explanations.
+This app predicts the likelihood of heart disease based on input features.
+Select one or more models, input feature values, and get predictions and probability estimates.
 """)
 
 # Sidebar for model selection with multi-select option
@@ -38,7 +38,7 @@ WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, valu
 Daily_Dose = st.sidebar.number_input("Daily Dose (Daily_Dose)", min_value=0.0, max_value=4000.0, value=2000.0)
 Single_Dose = st.sidebar.number_input("Single Dose (Single_Dose)", min_value=0.0, max_value=4000.0, value=450.0)
 VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 1])
-Terms = st.sidebar.selectbox("Terms (1 = Outpatient, 0 = Hospitalized)", [0, 1])
+Terms = st.sidebar.selectbox("Terms (1 = Outpatient, 0 = Be hospitalized)", [0, 1])
 Cmin = st.sidebar.number_input("Trough concentration (Cmin)", min_value=0.0, max_value=100.0, value=15.0)
 DBIL = st.sidebar.number_input("Direct Bilirubin (DBIL)", min_value=0.0, max_value=1000.0, value=5.0)
 TBIL = st.sidebar.number_input("Total Bilirubin (TBIL)", min_value=0.0, max_value=200.0, value=5.0)
@@ -52,10 +52,10 @@ HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0
 MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
-# 获取模型训练时的特征名称
-feature_names = random_forest.feature_names_in_
+# 确保 input_data 的列名与模型训练时的特征名称一致
+expected_feature_names = ['AGE', 'WT', 'Daily_Dose', 'Single_Dose', 'VPA', 'Terms', 'Cmin', 'DBIL', 'TBIL', 'ALT', 'AST', 'SCR', 'BUN', 'CLCR', 'HGB', 'HCT', 'MCH', 'MCHC']
 input_data = pd.DataFrame({
-    feature: [value] for feature, value in zip(feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
+    feature: [value] for feature, value in zip(expected_feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
 })
 
 # Add a predict button
@@ -75,9 +75,34 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-        # SHAP 瀑布图
-        st.write("### SHAP Waterfall Plot")
-        explainer = shap.Explainer(model)
-        shap_values = explainer(input_data)
-        shap.plots.waterfall(shap_values[0], max_display=10)
-        st.pyplot()
+        # 显示预测结果，使用 Matplotlib 渲染指定字体
+        text = f"Based on feature values, predicted possibility of good responder is {probability_good:.2f}%"
+        fig, ax = plt.subplots(figsize=(8, 1))
+        ax.text(
+            0.5, 0.5, text,
+            fontsize=16,
+            ha='center', va='center',
+            fontname='Times New Roman',
+            transform=ax.transAxes
+        )
+        ax.axis('off')
+        plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
+        st.image("prediction_text.png")
+
+        # 计算 SHAP 值
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(input_data)
+
+        # 生成 SHAP 力图
+        class_index = prediction  # 当前预测类别
+        shap_fig = shap.force_plot(
+            explainer.expected_value[class_index],
+            shap_values[class_index],
+            input_data,
+            matplotlib=True,
+        )
+        
+        # 显示 SHAP 力图
+        st.subheader(f"SHAP Force Plot for {model_name}")
+        plt.savefig(f"shap_force_plot_{model_name}.png", bbox_inches='tight', dpi=1200)
+        st.image(f"shap_force_plot_{model_name}.png")
