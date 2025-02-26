@@ -73,17 +73,18 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-        # Calculate SHAP values
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(input_data)
+       # Calculate SHAP values
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(input_data)
 
-        # Generate SHAP force plots for multiple samples and save as HTML
-        for i in range(input_data.shape[0]):
-            shap.force_plot(
-                explainer.expected_value[prediction],
-                shap_values[prediction][i],
-                input_data.iloc[i],
-                show=False,
-                save_html=f"{model_name}_shap_force_plot_sample_{i}.html"
-            )
-            components.html(f"{model_name}_shap_force_plot_sample_{i}.html", height=500)  # 显示保存的 HTML 文件
+# Generate SHAP force plots for multiple samples
+for i in range(input_data.shape[0]):
+    expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
+    html_output = shap.force_plot(
+        expected_value,
+        shap_values[1][i, :],  # Assuming binary classification
+        input_data.iloc[i],
+        show=False,
+        html_output=True
+    )
+    components.html(html_output, height=500)
