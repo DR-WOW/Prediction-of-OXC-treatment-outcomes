@@ -99,20 +99,28 @@ if st.sidebar.button("Predict"):
             st.error(f"Error calculating SHAP values for {model_name}: {e}")
             continue
 
-        # Generate SHAP plots for Good Responder and Poor Responder
+        # Generate SHAP plot based on the prediction result
         try:
-            # Extract SHAP values for each class
-            shap_good_responder = shap_values[:, 1, :]  # SHAP values for Good Responder
-            shap_poor_responder = shap_values[:, 0, :]  # SHAP values for Poor Responder
+            # Choose the SHAP values based on the prediction
+            if prediction == 1:  # Good Responder
+                shap_values_selected = shap_values.values[0, :, 1]
+                base_value = shap_values.base_values[1]
+                st.write("### SHAP Waterfall Plot for Good Responder")
+            else:  # Poor Responder
+                shap_values_selected = shap_values.values[0, :, 0]
+                base_value = shap_values.base_values[0]
+                st.write("### SHAP Waterfall Plot for Poor Responder")
 
-            # Plot for Good Responder
-            st.write("### SHAP Waterfall Plot for Good Responder")
-            shap.plots.waterfall(shap.Explanation(values=shap_good_responder[0], base_values=shap_values.base_values[1], data=input_data.iloc[0].values, feature_names=feature_names), max_display=10)
-            st.pyplot()
-
-            # Plot for Poor Responder
-            st.write("### SHAP Waterfall Plot for Poor Responder")
-            shap.plots.waterfall(shap.Explanation(values=shap_poor_responder[0], base_values=shap_values.base_values[0], data=input_data.iloc[0].values, feature_names=feature_names), max_display=10)
+            # Generate Waterfall Plot
+            shap.plots.waterfall(
+                shap.Explanation(
+                    values=shap_values_selected,
+                    base_values=base_value,
+                    data=input_data.iloc[0].values,
+                    feature_names=feature_names
+                ),
+                max_display=10
+            )
             st.pyplot()
         except Exception as e:
             st.error(f"Error generating SHAP plots for {model_name}: {e}")
