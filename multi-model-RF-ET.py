@@ -92,6 +92,7 @@ if st.sidebar.button("Predict"):
             if isinstance(model, (RandomForestClassifier, ExtraTreesClassifier)):
                 explainer = shap.TreeExplainer(model)
                 shap_values = explainer.shap_values(input_data)
+                expected_value = explainer.expected_value
                 st.success("SHAP values calculated successfully.")
             else:
                 raise ValueError("Unsupported model type for SHAP TreeExplainer.")
@@ -110,14 +111,14 @@ if st.sidebar.button("Predict"):
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Create an Explanation object
-            explanation = shap.Explanation(values=shap_values_selected, base_values=explainer.expected_value, data=input_data, feature_names=feature_names)
+            explanation = shap.Explanation(values=shap_values_selected, base_values=expected_value, data=input_data, feature_names=feature_names)
 
             # Adjust plot parameters
             plt.rcParams['figure.figsize'] = (18, 8)  # 设置图片大小
             plt.rcParams['figure.dpi'] = 300  # 设置图片的 DPI
 
             # Generate Waterfall Plot
-            shap.plots.waterfall(explanation.values[0], max_display=30)
+            shap.plots.waterfall(explanation)
             plt.savefig("shap_waterfall.png", dpi=300)  # 保存图片并设置 DPI
             st.image("shap_waterfall.png")  # 在 Streamlit 中显示图片
         except Exception as e:
