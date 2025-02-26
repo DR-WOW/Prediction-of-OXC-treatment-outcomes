@@ -110,7 +110,7 @@ if st.sidebar.button("Predict"):
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Generate Waterfall Plot
-            shap.plots.waterfall(shap_values_selected, max_display=10)
+            shap.plots.waterfall(shap.Explanation(values=shap_values_selected, base_values=explainer.expected_value, data=input_data.iloc[0], feature_names=feature_names))
             st.pyplot()
         except Exception as e:
             st.error(f"Error generating SHAP plots for {model_name}: {e}")
