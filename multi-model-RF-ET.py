@@ -63,46 +63,60 @@ if st.sidebar.button("Predict"):
     # Display predictions and probabilities for selected models
     for model_name in selected_models:
         model = models[model_name]
-        prediction = model.predict(input_data)[0]
-        predicted_proba = model.predict_proba(input_data)[0]
-
-        # Display the prediction and probabilities for each selected model
-        st.write(f"## Model: {model_name}")
-        st.write(f"**Prediction**: {'Good Responder' if prediction == 1 else 'Poor Responder'}")
-        st.write("**Prediction Probabilities**")
-        probability_good = predicted_proba[1] * 100
-        probability_poor = predicted_proba[0] * 100
-        st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
-        st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
-
-        # 显示预测结果，使用 Matplotlib 渲染指定字体
-        text = f"Based on feature values, predicted possibility of good responder is {probability_good:.2f}%"
-        fig, ax = plt.subplots(figsize=(8, 1))
-        ax.text(
-            0.5, 0.5, text,
-            fontsize=16,
-            ha='center', va='center',
-            fontname='Times New Roman',
-            transform=ax.transAxes
-        )
-        ax.axis('off')
-        plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
-        st.image("prediction_text.png")
-
-        # 计算 SHAP 值
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(input_data)
-
-        # 生成 SHAP 力图
-        class_index = prediction  # 当前预测类别
-        shap_fig = shap.force_plot(
-            explainer.expected_value[class_index],
-            shap_values[class_index],
-            input_data,
-            matplotlib=True,
-        )
         
-        # 显示 SHAP 力图
-        st.subheader(f"SHAP Force Plot for {model_name}")
-        plt.savefig(f"shap_force_plot_{model_name}.png", bbox_inches='tight', dpi=1200)
-        st.image(f"shap_force_plot_{model_name}.png")
+        # 检查输入数据的列名
+        st.write(f"Input Data Columns for {model_name}: {input_data.columns.tolist()}")  # Debug output
+        
+        # 检查列名是否匹配模型特征
+        if set(input_data.columns) != set(expected_feature_names):
+            st.error("The input feature names do not match the expected feature names.")
+            continue  # 跳过这个模型的预测
+        
+        # Make sure that input data is in the correct format
+        try:
+            prediction = model.predict(input_data)[0]
+            predicted_proba = model.predict_proba(input_data)[0]
+
+            # Display the prediction and probabilities for each selected model
+            st.write(f"## Model: {model_name}")
+            st.write(f"**Prediction**: {'Good Responder' if prediction == 1 else 'Poor Responder'}")
+            st.write("**Prediction Probabilities**")
+            probability_good = predicted_proba[1] * 100
+            probability_poor = predicted_proba[0] * 100
+            st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
+            st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
+
+            # 显示预测结果，使用 Matplotlib 渲染指定字体
+            text = f"Based on feature values, predicted possibility of good responder is {probability_good:.2f}%"
+            fig, ax = plt.subplots(figsize=(8, 1))
+            ax.text(
+                0.5, 0.5, text,
+                fontsize=16,
+                ha='center', va='center',
+                fontname='Times New Roman',
+                transform=ax.transAxes
+            )
+            ax.axis('off')
+            plt.savefig("prediction_text.png", bbox_inches='tight', dpi=300)
+            st.image("prediction_text.png")
+
+            # 计算 SHAP 值
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(input_data)
+
+            # 生成 SHAP 力图
+            class_index = prediction  # 当前预测类别
+            shap_fig = shap.force_plot(
+                explainer.expected_value[class_index],
+                shap_values[class_index],
+                input_data,
+                matplotlib=True,
+            )
+            
+            # 显示 SHAP 力图
+            st.subheader(f"SHAP Force Plot for {model_name}")
+            plt.savefig(f"shap_force_plot_{model_name}.png", bbox_inches='tight', dpi=1200)
+            st.image(f"shap_force_plot_{model_name}.png")
+        
+        except ValueError as e:
+            st.error(f"Error predicting with {model_name}: {e}")
