@@ -1,13 +1,17 @@
 import streamlit as st
 import joblib
 import pandas as pd
-import numpy as np
 import shap
 import streamlit.components.v1 as components
 
 # Load the models
-random_forest = joblib.load('Random Forest.pkl')
-extra_trees = joblib.load('Extra Trees.pkl')
+try:
+    random_forest = joblib.load('Random Forest.pkl')
+    extra_trees = joblib.load('Extra Trees.pkl')
+    st.success("Models loaded successfully.")
+except Exception as e:
+    st.error(f"Error loading models: {e}")
+    raise
 
 # Model dictionary
 models = {
@@ -20,7 +24,7 @@ st.title("Antiepileptic Drug (OXC) Treatment Outcome Prediction with SHAP Visual
 
 # Description
 st.write("""
-This app predicts the likelihood of heart disease based on input features.
+This app predicts the likelihood of treatment outcomes based on input features.
 Select one or more models, input feature values, and get predictions and probability estimates.
 """)
 
@@ -34,7 +38,7 @@ WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, valu
 Daily_Dose = st.sidebar.number_input("Daily Dose (Daily_Dose)", min_value=0.0, max_value=4000.0, value=2000.0)
 Single_Dose = st.sidebar.number_input("Single Dose (Single_Dose)", min_value=0.0, max_value=4000.0, value=450.0)
 VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 1])
-Terms = st.sidebar.selectbox("Terms(1 = Outpatient, 0 = Be hospitalized)", [0, 1])
+Terms = st.sidebar.selectbox("Terms (1 = Outpatient, 0 = Be hospitalized)", [0, 1])
 Cmin = st.sidebar.number_input("Trough concentration (Cmin)", min_value=0.0, max_value=100.0, value=15.0)
 DBIL = st.sidebar.number_input("Direct Bilirubin (DBIL)", min_value=0.0, max_value=1000.0, value=5.0)
 TBIL = st.sidebar.number_input("Total Bilirubin (TBIL)", min_value=0.0, max_value=200.0, value=5.0)
@@ -48,10 +52,15 @@ HCT = st.sidebar.number_input("Hematocrit (HCT)", min_value=0.0, max_value=200.0
 MCH = st.sidebar.number_input("Mean Corpuscular Hemoglobin (MCH)", min_value=0.0, max_value=1000.0, value=30.0)
 MCHC = st.sidebar.number_input("Mean Corpuscular Hemoglobin Concentration (MCHC)", min_value=0.0, max_value=500.0, value=345.0)
 
-# 获取模型训练时的特征名称,获取模型训练时的特征名称：使用 random_forest.feature_names_in_ 获取模型训练时的特征名称。
-feature_names = random_forest.feature_names_in_
+# 获取模型训练时的特征名称
+try:
+    feature_names = random_forest.feature_names_in_
+    st.success("Feature names loaded successfully.")
+except AttributeError:
+    st.error("Model does not have 'feature_names_in_' attribute. Please ensure the model is trained with a compatible library.")
+    raise
 
-# Convert inputs to DataFrame for model prediction,确保输入数据的特征名称和顺序一致：在创建 input_data 时，使用 zip 函数确保特征名称和顺序与模型训练时一致。
+# Convert inputs to DataFrame for model prediction
 input_data = pd.DataFrame({
     feature: [value] for feature, value in zip(feature_names, [AGE, WT, Daily_Dose, Single_Dose, VPA, Terms, Cmin, DBIL, TBIL, ALT, AST, SCR, BUN, CLCR, HGB, HCT, MCH, MCHC])
 })
@@ -61,8 +70,12 @@ if st.sidebar.button("Predict"):
     # Display predictions and probabilities for selected models
     for model_name in selected_models:
         model = models[model_name]
-        prediction = model.predict(input_data)[0]
-        predicted_proba = model.predict_proba(input_data)[0]
+        try:
+            prediction = model.predict(input_data)[0]
+            predicted_proba = model.predict_proba(input_data)[0]
+        except Exception as e:
+            st.error(f"Error making prediction with {model_name}: {e}")
+            continue
 
         # Display the prediction and probabilities for each selected model
         st.write(f"## Model: {model_name}")
@@ -73,18 +86,30 @@ if st.sidebar.button("Predict"):
         st.write(f"Based on feature values, predicted possibility of Good Responder is {probability_good:.2f}%")
         st.write(f"Based on feature values, predicted possibility of Poor Responder is {probability_poor:.2f}%")
 
-       # Calculate SHAP values
-explainer = shap.TreeExplainer(model)
-shap_values = explainer.shap_values(input_data)
+        # Calculate SHAP values
+        try:
+            if isinstance(model, (RandomForestClassifier, ExtraTreesClassifier)):
+                explainer = shap.TreeExplainer(model)
+            else:
+                raise ValueError("Unsupported model type for SHAP TreeExplainer.")
+            
+            shap_values = explainer.shap_values(input_data)
+            st.success("SHAP values calculated successfully.")
+        except Exception as e:
+            st.error(f"Error calculating SHAP values for {model_name}: {e}")
+            continue
 
-# Generate SHAP force plots for multiple samples
-for i in range(input_data.shape[0]):
-    expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
-    html_output = shap.force_plot(
-        expected_value,
-        shap_values[1][i, :],  # Assuming binary classification
-        input_data.iloc[i],
-        show=False,
-        html_output=True
-    )
-    components.html(html_output, height=500)
+        # Generate SHAP force plots for multiple samples
+        for i in range(input_data.shape[0]):
+            try:
+                expected_value = explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value
+                html_output = shap.force_plot(
+                    expected_value,
+                    shap_values[1][i, :],  # Assuming binary classification
+                    input_data.iloc[i],
+                    show=False,
+                    html_output=True
+                )
+                components.html(html_output, height=500)
+            except Exception as e:
+                st.error(f"Error generating SHAP force plot for {model_name}: {e}")
