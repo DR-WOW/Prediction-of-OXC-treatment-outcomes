@@ -91,7 +91,7 @@ if st.sidebar.button("Predict"):
         try:
             if isinstance(model, (RandomForestClassifier, ExtraTreesClassifier)):
                 explainer = shap.Explainer(model.predict_proba, input_data)
-                shap_values_Explanation = explainer(input_data)
+                shap_values = explainer(input_data)
                 st.success("SHAP values calculated successfully.")
             else:
                 raise ValueError("Unsupported model type for SHAP TreeExplainer.")
@@ -102,8 +102,8 @@ if st.sidebar.button("Predict"):
         # Generate SHAP plot based on the prediction result
         try:
             # Extract SHAP values for each class
-            shap_values_class_0 = shap_values_Explanation[:, :, 0]
-            shap_values_class_1 = shap_values_Explanation[:, :, 1]
+            shap_values_class_0 = shap_values[:, :, 0]
+            shap_values_class_1 = shap_values[:, :, 1]
 
             # Choose the SHAP values based on the prediction
             if prediction == 1:  # Good Responder
