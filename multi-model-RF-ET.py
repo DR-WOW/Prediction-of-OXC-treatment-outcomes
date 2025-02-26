@@ -38,7 +38,7 @@ AGE = st.sidebar.number_input("AGE", min_value=0.0, max_value=18.0, value=5.0)
 WT = st.sidebar.number_input("Weight (WT)", min_value=0.0, max_value=200.0, value=20.0)
 Daily_Dose = st.sidebar.number_input("Daily Dose (Daily_Dose)", min_value=0.0, max_value=4000.0, value=2000.0)
 Single_Dose = st.sidebar.number_input("Single Dose (Single_Dose)", min_value=0.0, max_value=4000.0, value=450.0)
-VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 1])
+VPA = st.sidebar.selectbox("VPA (1 = Combined with VPA, 0 = Combined without VPA)", [0, 0])
 Terms = st.sidebar.selectbox("Terms (1 = Outpatient, 0 = Be hospitalized)", [0, 1])
 Cmin = st.sidebar.number_input("Trough concentration (Cmin)", min_value=0.0, max_value=100.0, value=15.0)
 DBIL = st.sidebar.number_input("Direct Bilirubin (DBIL)", min_value=0.0, max_value=1000.0, value=5.0)
@@ -110,7 +110,7 @@ if st.sidebar.button("Predict"):
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Generate Waterfall Plot
-            shap.plots.waterfall(shap.Explanation(values=shap_values_selected, base_values=explainer.expected_value, data=input_data.iloc[0], feature_names=feature_names))
+            shap.plots.waterfall(shap.Explanation(values=shap_values_selected, base_values=shap_values.base_values[0], data=input_data.iloc[0], feature_names=feature_names))
             st.pyplot()
         except Exception as e:
             st.error(f"Error generating SHAP plots for {model_name}: {e}")
