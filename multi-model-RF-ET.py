@@ -102,17 +102,17 @@ if st.sidebar.button("Predict"):
         # Generate SHAP plots for Good Responder and Poor Responder
         try:
             # Extract SHAP values for each class
-            shap_good_responder = shap_values[:, 1, :]  # SHAP values for Good Responder
-            shap_poor_responder = shap_values[:, 0, :]  # SHAP values for Poor Responder
+            shap_good_responder = shap_values.values[:, 1, :]  # SHAP values for Good Responder
+            shap_poor_responder = shap_values.values[:, 0, :]  # SHAP values for Poor Responder
 
             # Plot for Good Responder
             st.write("### SHAP Waterfall Plot for Good Responder")
-            shap.plots.waterfall(shap_good_responder[0], max_display=10)
+            shap.plots.waterfall(shap.Explanation(values=shap_good_responder[0], base_values=shap_values.base_values[1], data=input_data.iloc[0].values, feature_names=feature_names), max_display=10)
             st.pyplot()
 
             # Plot for Poor Responder
             st.write("### SHAP Waterfall Plot for Poor Responder")
-            shap.plots.waterfall(shap_poor_responder[0], max_display=10)
+            shap.plots.waterfall(shap.Explanation(values=shap_poor_responder[0], base_values=shap_values.base_values[0], data=input_data.iloc[0].values, feature_names=feature_names), max_display=10)
             st.pyplot()
         except Exception as e:
             st.error(f"Error generating SHAP plots for {model_name}: {e}")
