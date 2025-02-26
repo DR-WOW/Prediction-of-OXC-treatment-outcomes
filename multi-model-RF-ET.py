@@ -7,12 +7,12 @@ import streamlit.components.v1 as components
 
 # Load the models
 random_forest = joblib.load('Random Forest.pkl')
-#extra_trees = joblib.load('Extra Trees.pkl')
+extra_trees = joblib.load('Extra Trees.pkl')
 
 # Model dictionary
 models = {
     'Random Forest (RF)': random_forest,
-    #'Extra Trees': extra_trees
+    'Extra Trees': extra_trees
 }
 
 # Title
