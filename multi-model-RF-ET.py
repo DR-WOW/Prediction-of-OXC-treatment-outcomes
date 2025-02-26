@@ -2,7 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import shap
-import streamlit.components.v1 as components
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 
 # Load the models
@@ -99,9 +99,20 @@ if st.sidebar.button("Predict"):
             st.error(f"Error calculating SHAP values for {model_name}: {e}")
             continue
 
-        # Generate SHAP plots
+        # Generate SHAP plots for Good Responder and Poor Responder
         try:
-            shap.plots.waterfall(shap_values[0], max_display=10)
+            # Extract SHAP values for each class
+            shap_good_responder = shap_values[:, 1, :]  # SHAP values for Good Responder
+            shap_poor_responder = shap_values[:, 0, :]  # SHAP values for Poor Responder
+
+            # Plot for Good Responder
+            st.write("### SHAP Waterfall Plot for Good Responder")
+            shap.plots.waterfall(shap_good_responder[0], max_display=10)
+            st.pyplot()
+
+            # Plot for Poor Responder
+            st.write("### SHAP Waterfall Plot for Poor Responder")
+            shap.plots.waterfall(shap_poor_responder[0], max_display=10)
             st.pyplot()
         except Exception as e:
-            st.error(f"Error generating SHAP plot for {model_name}: {e}")
+            st.error(f"Error generating SHAP plots for {model_name}: {e}")
