@@ -101,16 +101,12 @@ if st.sidebar.button("Predict"):
 
         # Generate SHAP plot based on the prediction result
         try:
-            # Extract SHAP values for each class
-            shap_values_class_0 = shap_values[0]
-            shap_values_class_1 = shap_values[1]
-
             # Choose the SHAP values based on the prediction
             if prediction == 1:  # Good Responder
-                shap_values_selected = shap_values_class_1
+                shap_values_selected = shap_values
                 st.write("### SHAP Waterfall Plot for Good Responder")
             else:  # Poor Responder
-                shap_values_selected = shap_values_class_0
+                shap_values_selected = shap_values
                 st.write("### SHAP Waterfall Plot for Poor Responder")
 
             # Adjust plot parameters
